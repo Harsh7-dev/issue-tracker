@@ -1,8 +1,13 @@
 # Test Cases — Mini Issue Tracking System
 
-This document enumerates the manual/automated test cases for the system. Each case lists an ID, title, preconditions, steps, and expected result. UI cases (UI-01..21) map one-to-one to the Playwright suite in `tests/playwright`; API cases (API-01..30) map to the Postman/Newman collection in `tests/postman`. Cases cover positive paths, negative paths, and edge conditions.
+This is the list of test cases for the system. Each one has an ID, a title,
+preconditions, steps, and an expected result. The UI cases (UI-01..21) line up
+one-to-one with the Playwright suite in `tests/playwright`, and the API cases
+(API-01..30) line up with the Postman/Newman collection in `tests/postman`. There's
+a mix of happy paths, failure cases, and edge cases.
 
-Priority/status enums: priority ∈ {LOW, MEDIUM, HIGH, CRITICAL}; status ∈ {TODO, IN_PROGRESS, DONE}.
+Enums: priority is one of {LOW, MEDIUM, HIGH, CRITICAL}; status is one of
+{TODO, IN_PROGRESS, DONE}.
 
 ---
 
@@ -197,4 +202,10 @@ All requests target the REST API under `/api`. Auth is via `Authorization: Beare
 
 ## Coverage summary
 
-The suite provides 21 UI cases and 30 API cases (51 total), exceeding the 20-each minimum. Positive paths confirm features work; negative paths confirm validation and authorization reject bad input; edge cases (all-zero UUIDs, double-delete, archived-project writes, empty result sets) confirm graceful handling of boundaries. Authentication and authorization are tested at both the UI and API layers, reflecting their status as the highest-risk areas in the risk analysis.
+That's 21 UI cases and 30 API cases, 51 in total, which clears the 20-each
+minimum. The happy paths show the features work, the failure cases show that
+validation and authorization actually reject bad input, and the edge cases
+(all-zero UUIDs, deleting something twice, writing to an archived project, empty
+result sets) show the boundaries are handled cleanly. Auth and authorization are
+covered at both the UI and API layers, since those are the highest-risk areas in
+the risk analysis.

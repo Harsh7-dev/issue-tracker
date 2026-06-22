@@ -1,6 +1,8 @@
 # Bug Report Template — Mini Issue Tracking System
 
-A good bug report lets someone who has never seen the defect reproduce it in minutes and understand its impact without asking questions. The template below is the standard for this project. Two filled examples follow it.
+A good bug report lets someone who's never seen the bug reproduce it in a few
+minutes and understand how bad it is without having to ask. This is the template I
+use for this project. Two filled-in examples follow.
 
 ---
 

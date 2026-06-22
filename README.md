@@ -1,30 +1,43 @@
 # Beacon — Mini Issue Tracking System
 
-A full-stack issue tracker built for a QA-focused take-home: users register, create projects, and track issues through a Todo → In Progress → Done lifecycle, with search, filtering, and a dashboard. The repository includes the working application, a layered REST API, and a complete QA suite — UI automation (Playwright), API automation (Postman/Newman), backend tests (JUnit), CI, and the QA documentation set.
+Beacon is a small issue tracker. You register an account, create projects, and
+move issues through Todo → In Progress → Done, with search, filtering, and a
+dashboard on top. It was built as a QA-focused take-home, so the repo ships with
+the working app plus a full test setup: Playwright for the UI, Postman/Newman for
+the API, JUnit for the backend, CI to run it all, and the QA docs under `docs/`.
 
 ## Stack
 
-The backend is Spring Boot 3 (Java 17) with Spring Security, JWT auth, Spring Data JPA, and Bean Validation, over PostgreSQL. The frontend is React with Vite and React Router. UI tests use Playwright; API tests use Postman executed by Newman. Everything is containerised with Docker and wired into GitHub Actions.
+The backend is Spring Boot 3 on Java 17, using Spring Security with JWT auth,
+Spring Data JPA, and Bean Validation, backed by PostgreSQL. The frontend is React
+with Vite and React Router. UI tests run on Playwright and API tests run on
+Postman via Newman. The whole thing runs in Docker and has a GitHub Actions
+pipeline.
 
-## Quick start (one command)
+## Quick start
 
-With Docker installed:
+If you have Docker:
 
 ```bash
 docker compose up --build
 ```
 
-This starts PostgreSQL, the backend (on :8080), and the frontend (on :3000), gating the backend on a healthy database. Open **http://localhost:3000**, register an account, and start creating projects and issues. The backend health check is at http://localhost:8080/actuator/health.
+That brings up PostgreSQL, the backend on `:8080`, and the frontend on `:3000`,
+and it waits for the database to be healthy before starting the backend. Open
+**http://localhost:3000**, register, and you're in. Backend health lives at
+http://localhost:8080/actuator/health.
 
-To stop and remove volumes:
+To stop everything and wipe the database volume:
 
 ```bash
 docker compose down -v
 ```
 
+Leave off `-v` if you want to keep your data between runs.
+
 ## Running locally without Docker
 
-Backend (requires JDK 17 and a local PostgreSQL, or point the env vars at any Postgres):
+Backend — you'll need JDK 17 and a Postgres to point at:
 
 ```bash
 cd backend
@@ -38,36 +51,41 @@ Frontend:
 ```bash
 cd frontend
 npm install
-npm run dev                # serves on http://localhost:5173, proxies /api to :8080
+npm run dev                # http://localhost:5173, proxies /api to :8080
 ```
 
 ## Running the tests
 
-**Backend (JUnit + MockMvc, in-memory H2 — no database needed):**
+**Backend (JUnit + MockMvc on in-memory H2 — no database required):**
 
 ```bash
 cd backend
 mvn verify
 ```
 
-The suite also includes a Testcontainers integration test (`IssuePostgresIntegrationTest`) that runs the full project/issue flow against a real **PostgreSQL** container, so Postgres-specific behaviour (lazy-loaded associations with `open-in-view: false`, untyped nulls in the issue-search query) is exercised rather than only H2. It needs a running Docker daemon and is **skipped automatically** when Docker is unavailable, so `mvn verify` still passes without it. CI runs it on every push (the runner has Docker).
+There's also a Testcontainers test (`IssuePostgresIntegrationTest`) that runs the
+full project/issue flow against a real PostgreSQL container. The point is to catch
+the Postgres-specific things H2 lets slide — lazy-loaded associations under
+`open-in-view: false`, and untyped nulls in the issue-search query. It needs Docker
+running and skips itself when Docker isn't there, so `mvn verify` still passes
+without it. CI runs it on every push since the runner has Docker.
 
-**UI automation (Playwright)** — needs the app running (e.g. `docker compose up`):
+**UI tests (Playwright)** — the app needs to be running first (e.g. `docker compose up`):
 
 ```bash
 cd tests/playwright
 npm install
 npx playwright install --with-deps chromium
-npx playwright test           # 21 UI test cases
-npx playwright show-report    # view the HTML report
+npx playwright test           # 21 UI cases
+npx playwright show-report    # open the HTML report
 ```
 
-**API automation (Postman/Newman)** — needs the backend running:
+**API tests (Postman/Newman)** — needs the backend running:
 
 ```bash
 npm install -g newman
 newman run tests/postman/issue-tracker.postman_collection.json \
-  -e tests/postman/local.postman_environment.json   # 30 API test cases
+  -e tests/postman/local.postman_environment.json   # 30 API cases
 ```
 
 **Frontend lint and build:**
@@ -78,14 +96,14 @@ npm run lint
 npm run build
 ```
 
-All of the above run automatically on every pull request via `.github/workflows/ci.yml`.
+All of these also run on every pull request through `.github/workflows/ci.yml`.
 
 ## Project structure
 
 ```
 issue-tracker/
 ├── backend/            Spring Boot API (controllers, services, repositories, security)
-│   └── src/main/resources/db/schema.sql   canonical PostgreSQL DDL
+│   └── src/main/resources/db/schema.sql   PostgreSQL DDL
 ├── frontend/           React + Vite SPA
 ├── tests/
 │   ├── playwright/     UI automation (21 cases)
@@ -103,17 +121,38 @@ issue-tracker/
 
 Auth: `POST /api/auth/register`, `POST /api/auth/login`, `POST /api/auth/logout`.
 Projects: `GET/POST /api/projects`, `GET/PATCH /api/projects/:id`, `POST /api/projects/:id/archive`.
-Issues: `GET/POST /api/projects/:projectId/issues` (with `?title=&status=&priority=&assigneeId=` filters), `GET/PATCH/DELETE /api/issues/:id`.
+Issues: `GET/POST /api/projects/:projectId/issues` (filters: `?title=&status=&priority=&assigneeId=`), `GET/PATCH/DELETE /api/issues/:id`.
 Dashboard: `GET /api/dashboard/stats`.
 
-Protected endpoints require `Authorization: Bearer <token>`.
+Anything that isn't an auth route needs `Authorization: Bearer <token>`.
 
 ## QA documentation
 
-The `docs/` folder contains the Test Strategy (approach, risk analysis, regression focus), the Test Cases (21 UI + 30 API, mapped to the automated suites), the Bug Report Template (with two worked examples), and the System Design (architecture, tradeoffs, and a scaling plan for 100 / 10,000 / 1,000,000 users).
+The `docs/` folder has the Test Strategy (approach, risks, what to watch on
+regression), the Test Cases (21 UI + 30 API, mapped to the automated suites), a
+Bug Report Template with two worked examples, and the System Design (architecture,
+the tradeoffs behind it, and how it would scale to 100 / 10,000 / 1,000,000 users).
 
 ## Assumptions
 
-A handful of product and scope decisions were made where the brief left room, and are recorded here so they are easy to challenge:
+The brief left some things open, so here are the calls I made, written down so
+they're easy to argue with:
 
-A user sees and manages only the projects they own; there is no sharing, team membership, or multi-user collaboration on a project, since the brief describes single-user ownership. Because there is no project membership, an issue's assignee is, in practice, the owner; the data model supports arbitrary assignees but the UI assigns to the owner. Logout is handled client-side by discarding the JWT, as is standard for stateless tokens; tokens remain valid until expiry, and server-side revocation is listed as a documented next step. Archiving a project is soft (a flag) rather than a delete, and an archived project becomes read-only — existing issues remain visible but no new issues can be added. Issue lists are returned unpaginated for the scope of this exercise; pagination is identified as the first scaling change. Email addresses are treated as the unique login identity and are stored lower-cased. The default issue priority is MEDIUM and the default status is TODO when omitted. The JWT secret and database credentials are supplied via environment variables; the values in `docker-compose.yml` are development defaults and must be overridden in any real deployment. Finally, the dashboard's "open" count is defined as every issue not in the DONE state (i.e. TODO and IN_PROGRESS together).
+- A user only sees and manages their own projects. There's no sharing, teams, or
+  collaboration on a project, since the brief described single-user ownership.
+- Because projects have no members, an issue's assignee is effectively the owner.
+  The data model allows any assignee, but the UI assigns to the owner.
+- Logout just throws away the JWT on the client, which is normal for stateless
+  tokens. Tokens stay valid until they expire; server-side revocation is on the
+  "next steps" list.
+- Archiving is a soft flag, not a delete. An archived project goes read-only —
+  you can still see its issues but can't add new ones.
+- Issue lists aren't paginated yet. That's the first thing I'd add when projects
+  get big.
+- Email is the login identity and is stored lower-cased.
+- Default priority is MEDIUM and default status is TODO when you leave them out.
+- The JWT secret and DB credentials come from environment variables. The values
+  in `docker-compose.yml` are dev defaults and need to be replaced for anything
+  real.
+- The dashboard's "open" count means anything not DONE, so TODO and IN_PROGRESS
+  together.
