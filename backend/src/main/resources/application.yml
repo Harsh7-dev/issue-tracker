@@ -1,0 +1,34 @@
+spring:
+  application:
+    name: issue-tracker
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/tracker}
+    username: ${DB_USER:tracker}
+    password: ${DB_PASSWORD:tracker}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: false
+    open-in-view: false
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:change-me-in-prod-this-is-a-demo-secret-key-of-sufficient-length-32+}
+    expiration-ms: ${JWT_EXPIRATION_MS:86400000}
+
+logging:
+  level:
+    com.tracker: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
